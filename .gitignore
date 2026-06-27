@@ -1,0 +1,13 @@
+# ai tools
+.agent/
+.cursor/
+.claude/
+.codex/
+openspec
+docs/plans/*
+
+# env files
+.env
+.env.local
+node_modules
+node_modules
