@@ -1,12 +1,13 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { AppState, Receita, DespesaFixa, Compra, Meta } from '../types'
+import type { AppState, Receita, DespesaFixa, Compra, Cartao, Meta } from '../types'
 
 type StoreData = Omit<AppState,
   | 'setMesRef' | 'setAnoRef'
   | 'addReceita' | 'updateReceita' | 'removeReceita'
   | 'addFixo' | 'updateFixo' | 'removeFixo'
   | 'addCompra' | 'updateCompra' | 'removeCompra'
+  | 'addCartao' | 'updateCartao' | 'removeCartao'
   | 'addMeta' | 'updateMeta' | 'removeMeta'
 >
 
@@ -20,6 +21,7 @@ export const useFinStore = create<AppState>()(
       receitas: [] as Receita[],
       fixos: [] as DespesaFixa[],
       compras: [] as Compra[],
+      cartoes: [] as Cartao[],
       metas: [] as Meta[],
       nid: 1,
 
@@ -53,6 +55,15 @@ export const useFinStore = create<AppState>()(
       removeCompra: (id) =>
         set((s) => ({ compras: s.compras.filter((x) => x.id !== id) })),
 
+      addCartao: (c) => {
+        const nid = get().nid
+        set((s) => ({ cartoes: [...s.cartoes, { ...c, id: nid }], nid: nid + 1 }))
+      },
+      updateCartao: (id, c) =>
+        set((s) => ({ cartoes: s.cartoes.map((x) => (x.id === id ? { ...x, ...c } : x)) })),
+      removeCartao: (id) =>
+        set((s) => ({ cartoes: s.cartoes.filter((x) => x.id !== id) })),
+
       addMeta: (m) => {
         const nid = get().nid
         const existing = get().metas.find((x) => x.mesAno === m.mesAno)
@@ -77,6 +88,7 @@ export const useFinStore = create<AppState>()(
           receitas: data.receitas ?? [],
           fixos: data.fixos ?? [],
           compras: data.compras ?? [],
+          cartoes: data.cartoes ?? [],
           metas: data.metas ?? [],
           nid: data.nid ?? 1,
         } satisfies StoreData

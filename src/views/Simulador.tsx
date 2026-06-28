@@ -5,9 +5,9 @@ import { fmt } from '../utils/format'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Panel } from '../components/ui/Panel'
-import type { TipoCompra, CategoriaCompra, Cartao, Compra } from '../types'
+import type { TipoCompra, CategoriaCompra, BancoCartao, Compra } from '../types'
 
-const CARTOES: Cartao[] = ['nubank', 'inter', 'itau', 'bradesco', 'xp', 'c6', 'outro']
+const CARTOES: BancoCartao[] = ['nubank', 'inter', 'itau', 'bradesco', 'xp', 'c6', 'outro']
 const CATS: CategoriaCompra[] = ['alimentacao', 'transporte', 'saude', 'lazer', 'vestuario', 'educacao', 'casa', 'outro']
 
 const MES_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
@@ -35,7 +35,7 @@ export function Simulador() {
     valor: valorNum,
     parcela,
     nparc: nParcNum,
-    cartao: (cartao || undefined) as Cartao | undefined,
+    cartao: (cartao || undefined) as BancoCartao | undefined,
     cat: (cat || undefined) as CategoriaCompra | undefined,
   }
 

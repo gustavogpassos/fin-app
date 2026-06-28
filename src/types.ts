@@ -30,7 +30,14 @@ export type CategoriaCompra =
   | 'casa'
   | 'outro'
 
-export type Cartao = 'nubank' | 'inter' | 'itau' | 'bradesco' | 'xp' | 'c6' | 'outro'
+export type BancoCartao = 'nubank' | 'inter' | 'itau' | 'bradesco' | 'xp' | 'c6' | 'outro'
+
+export interface Cartao {
+  id: number
+  banco: BancoCartao
+  apelido?: string
+  limite: number
+}
 
 export interface Compra {
   id: number
@@ -40,7 +47,7 @@ export interface Compra {
   valor: number
   parcela: number
   nparc: number
-  cartao?: Cartao
+  cartao?: BancoCartao
   cat?: CategoriaCompra
   obs?: string
 }
@@ -57,6 +64,7 @@ export interface AppState {
   receitas: Receita[]
   fixos: DespesaFixa[]
   compras: Compra[]
+  cartoes: Cartao[]
   metas: Meta[]
   nid: number
   setMesRef: (mes: number) => void
@@ -70,6 +78,9 @@ export interface AppState {
   addCompra: (c: Omit<Compra, 'id'>) => void
   updateCompra: (id: number, c: Partial<Omit<Compra, 'id'>>) => void
   removeCompra: (id: number) => void
+  addCartao: (c: Omit<Cartao, 'id'>) => void
+  updateCartao: (id: number, c: Partial<Omit<Cartao, 'id'>>) => void
+  removeCartao: (id: number) => void
   addMeta: (m: Omit<Meta, 'id'>) => void
   updateMeta: (id: number, m: Partial<Omit<Meta, 'id'>>) => void
   removeMeta: (id: number) => void

@@ -9,9 +9,9 @@ import { Badge } from '../components/ui/Badge'
 import { BottomSheet } from '../components/ui/BottomSheet'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Search, Pencil, Trash2 } from 'lucide-react'
-import type { Compra, TipoCompra, CategoriaCompra, Cartao } from '../types'
+import type { Compra, TipoCompra, CategoriaCompra, BancoCartao } from '../types'
 
-const CARTOES: Cartao[] = ['nubank', 'inter', 'itau', 'bradesco', 'xp', 'c6', 'outro']
+const CARTOES: BancoCartao[] = ['nubank', 'inter', 'itau', 'bradesco', 'xp', 'c6', 'outro']
 const CATS: CategoriaCompra[] = ['alimentacao', 'transporte', 'saude', 'lazer', 'vestuario', 'educacao', 'casa', 'outro']
 
 interface PurchaseForm {
@@ -58,7 +58,7 @@ interface PurchaseSheetProps {
   editing: Compra | null
 }
 
-function PurchaseSheet({ open, onClose, editing }: PurchaseSheetProps) {
+export function PurchaseSheet({ open, onClose, editing }: PurchaseSheetProps) {
   const addCompra = useFinStore((s) => s.addCompra)
   const updateCompra = useFinStore((s) => s.updateCompra)
   const [form, setForm] = useState<PurchaseForm>(() => editing ? formFromCompra(editing) : emptyForm())
@@ -68,16 +68,17 @@ function PurchaseSheet({ open, onClose, editing }: PurchaseSheetProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const valor = parseFloat(form.valor) || 0
-    const parcela = form.tipo === 'parcelado' ? parseFloat(form.parcela) || valor / (parseInt(form.nparc) || 1) : valor
+    const nparc = parseInt(form.nparc) || 1
+    const parcela = form.tipo === 'parcelado' ? parseFloat(form.parcela) || 0 : parseFloat(form.valor) || 0
+    const valor = form.tipo === 'parcelado' ? parcela * nparc : parcela
     const payload = {
       desc: form.desc,
       data: form.data,
       tipo: form.tipo,
       valor,
       parcela,
-      nparc: parseInt(form.nparc) || 1,
-      cartao: (form.cartao || undefined) as Cartao | undefined,
+      nparc,
+      cartao: (form.cartao || undefined) as BancoCartao | undefined,
       cat: (form.cat || undefined) as CategoriaCompra | undefined,
       obs: form.obs || undefined,
     }
@@ -114,16 +115,12 @@ function PurchaseSheet({ open, onClose, editing }: PurchaseSheetProps) {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label>Valor total (R$)</label>
-              <input type="number" step="0.01" value={form.valor} onChange={set('valor')} />
+              <label>Parcela (R$) *</label>
+              <input type="number" step="0.01" value={form.parcela} onChange={set('parcela')} required />
             </div>
             <div>
-              <label>Parcela (R$)</label>
-              <input type="number" step="0.01" value={form.parcela} onChange={set('parcela')} />
-            </div>
-            <div>
-              <label>N. parcelas</label>
-              <input type="number" min="1" value={form.nparc} onChange={set('nparc')} />
+              <label>N. parcelas *</label>
+              <input type="number" min="1" value={form.nparc} onChange={set('nparc')} required />
             </div>
           </div>
         )}

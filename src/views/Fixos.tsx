@@ -12,7 +12,7 @@ import type { Receita, DespesaFixa, TipoReceita, CategoriaFixo } from '../types'
 const TIPOS_RECEITA: TipoReceita[] = ['salario', 'freelance', 'outro']
 const CATS_FIXO: CategoriaFixo[] = ['moradia', 'transporte', 'saude', 'educacao', 'lazer', 'outro']
 
-function ReceitaModal({
+export function ReceitaModal({
   editing,
   onClose,
 }: {
@@ -101,7 +101,7 @@ function ReceitaModal({
   )
 }
 
-function FixoModal({ editing, onClose }: { editing: DespesaFixa | null; onClose: () => void }) {
+export function FixoModal({ editing, onClose }: { editing: DespesaFixa | null; onClose: () => void }) {
   const addFixo = useFinStore((s) => s.addFixo)
   const updateFixo = useFinStore((s) => s.updateFixo)
 
