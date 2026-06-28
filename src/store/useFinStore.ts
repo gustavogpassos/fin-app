@@ -1,6 +1,50 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { AppState, Receita, DespesaFixa, Compra, Cartao, Meta } from '../types'
+
+const getDB = (): Promise<IDBDatabase> =>
+  new Promise((resolve, reject) => {
+    const req = indexedDB.open('finapp', 1)
+    req.onupgradeneeded = () => req.result.createObjectStore('kv')
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+
+// ponytail: one-time migration from localStorage on first IDB miss
+const idbStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    const db = await getDB()
+    return new Promise((resolve) => {
+      const r = db.transaction('kv').objectStore('kv').get(name)
+      r.onsuccess = () => {
+        if (r.result != null) { resolve(r.result); return }
+        const ls = localStorage.getItem(name)
+        if (ls) {
+          idbStorage.setItem(name, ls).then(() => localStorage.removeItem(name))
+        }
+        resolve(ls)
+      }
+      r.onerror = () => resolve(null)
+    })
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    const db = await getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('kv', 'readwrite')
+      tx.objectStore('kv').put(value, name)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  },
+  removeItem: async (name: string): Promise<void> => {
+    const db = await getDB()
+    return new Promise((resolve) => {
+      const tx = db.transaction('kv', 'readwrite')
+      tx.objectStore('kv').delete(name)
+      tx.oncomplete = () => resolve()
+    })
+  },
+}
 
 type StoreData = Omit<AppState,
   | 'setMesRef' | 'setAnoRef'
@@ -80,6 +124,7 @@ export const useFinStore = create<AppState>()(
     }),
     {
       name: 'fin2',
+      storage: createJSONStorage(() => idbStorage),
       migrate: (persisted, _version) => {
         const data = persisted as Partial<StoreData>
         return {
