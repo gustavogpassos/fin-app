@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
-import { Bell, Eye, ArrowRight, QrCode, ArrowLeft, TrendingUp, Utensils, Car, Heart, Music, ShoppingBag, BookOpen, Home, Tag, Banknote } from 'lucide-react'
+import { Bell, Eye, Utensils, Car, Heart, Music, ShoppingBag, BookOpen, Home, Tag, Banknote } from 'lucide-react'
 import { useFinStore } from '../store/useFinStore'
 import { totReceitas, totFixos, totComprasMes, saldoMes, parcelaMes } from '../utils/finance'
 import { fmt } from '../utils/format'
 import type { CategoriaCompra } from '../types'
+
+const ALL_CATS: CategoriaCompra[] = ['alimentacao', 'transporte', 'saude', 'lazer', 'vestuario', 'educacao', 'casa', 'outro']
 
 const CAT_CFG: Record<CategoriaCompra | 'receita', { bg: string; color: string; Icon: React.ElementType }> = {
   alimentacao: { bg: '#FFF3EB', color: '#F97316', Icon: Utensils },
@@ -36,6 +38,14 @@ export function Dashboard() {
     .filter(c => parcelaMes(c, mesRef, anoRef) > 0)
     .sort((a, b) => b.data.localeCompare(a.data))
     .slice(0, 3)
+
+  const catTotals = ALL_CATS
+    .map(cat => ({
+      cat,
+      total: compras.filter(c => c.cat === cat).reduce((s, c) => s + parcelaMes(c, mesRef, anoRef), 0),
+    }))
+    .filter(({ total }) => total > 0)
+    .sort((a, b) => b.total - a.total)
 
   return (
     <div>
@@ -78,22 +88,29 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div style={{ display: 'flex', gap: 4, padding: '20px 20px 0' }}>
-        {([
-          { icon: <ArrowRight size={22} color="#1A6BFF" />, label: 'Transferir' },
-          { icon: <QrCode size={22} color="#1A6BFF" />, label: 'Pagar' },
-          { icon: <ArrowLeft size={22} color="#1A6BFF" />, label: 'Receber' },
-          { icon: <TrendingUp size={22} color="#1A6BFF" />, label: 'Investir' },
-        ] as const).map(({ icon, label }) => (
-          <div key={label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 54, height: 54, borderRadius: 18, background: '#EEF3FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {icon}
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#0D1B2A' }}>{label}</span>
+      {/* Category Summary */}
+      {catTotals.length > 0 && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '22px 20px 12px' }}>
+            <div style={{ fontSize: 17, fontWeight: 800, color: '#0D1B2A' }}>Por categoria</div>
           </div>
-        ))}
-      </div>
+          <div style={{ padding: '0 20px' }}>
+            {catTotals.map(({ cat, total }) => {
+              const cfg = CAT_CFG[cat]
+              const { Icon } = cfg
+              return (
+                <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#fff', borderRadius: 20, marginBottom: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={17} color={cfg.color} strokeWidth={2.2} />
+                  </div>
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#0D1B2A', textTransform: 'capitalize' }}>{cat}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#F03E5E' }}>{fmt(total)}</span>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
 
       {/* Recent Transactions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '22px 20px 12px' }}>

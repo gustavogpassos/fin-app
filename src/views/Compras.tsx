@@ -8,10 +8,10 @@ import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { BottomSheet } from '../components/ui/BottomSheet'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
+import { BANCO_LABELS } from '../components/CartaoSheet'
 import { Search, Pencil, Trash2 } from 'lucide-react'
-import type { Compra, TipoCompra, CategoriaCompra, BancoCartao } from '../types'
+import type { Compra, TipoCompra, CategoriaCompra } from '../types'
 
-const CARTOES: BancoCartao[] = ['nubank', 'inter', 'itau', 'bradesco', 'xp', 'c6', 'outro']
 const CATS: CategoriaCompra[] = ['alimentacao', 'transporte', 'saude', 'lazer', 'vestuario', 'educacao', 'casa', 'outro']
 
 interface PurchaseForm {
@@ -24,6 +24,7 @@ interface PurchaseForm {
   cartao: string
   cat: string
   obs: string
+  fechamentoCartao: string
 }
 
 const emptyForm = (): PurchaseForm => ({
@@ -36,6 +37,7 @@ const emptyForm = (): PurchaseForm => ({
   cartao: '',
   cat: '',
   obs: '',
+  fechamentoCartao: '',
 })
 
 function formFromCompra(c: Compra): PurchaseForm {
@@ -46,9 +48,10 @@ function formFromCompra(c: Compra): PurchaseForm {
     valor: String(c.valor),
     parcela: String(c.parcela),
     nparc: String(c.nparc),
-    cartao: c.cartao ?? '',
+    cartao: c.cartao != null ? String(c.cartao) : '',
     cat: c.cat ?? '',
     obs: c.obs ?? '',
+    fechamentoCartao: c.fechamentoCartao ? String(c.fechamentoCartao) : '',
   }
 }
 
@@ -61,10 +64,17 @@ interface PurchaseSheetProps {
 export function PurchaseSheet({ open, onClose, editing }: PurchaseSheetProps) {
   const addCompra = useFinStore((s) => s.addCompra)
   const updateCompra = useFinStore((s) => s.updateCompra)
+  const cartoes = useFinStore((s) => s.cartoes)
   const [form, setForm] = useState<PurchaseForm>(() => editing ? formFromCompra(editing) : emptyForm())
 
   const set = (k: keyof PurchaseForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const handleCartaoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const idStr = e.target.value
+    const card = cartoes.find((c) => String(c.id) === idStr)
+    setForm((f) => ({ ...f, cartao: idStr, fechamentoCartao: card?.fechamento ? String(card.fechamento) : '' }))
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -78,9 +88,10 @@ export function PurchaseSheet({ open, onClose, editing }: PurchaseSheetProps) {
       valor,
       parcela,
       nparc,
-      cartao: (form.cartao || undefined) as BancoCartao | undefined,
+      cartao: form.cartao ? parseInt(form.cartao) : undefined,
       cat: (form.cat || undefined) as CategoriaCompra | undefined,
       obs: form.obs || undefined,
+      fechamentoCartao: parseInt(form.fechamentoCartao) || undefined,
     }
     if (editing) updateCompra(editing.id, payload)
     else addCompra(payload)
@@ -127,9 +138,9 @@ export function PurchaseSheet({ open, onClose, editing }: PurchaseSheetProps) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label>Cartao</label>
-            <select value={form.cartao} onChange={set('cartao')}>
-              <option value="">Nenhum</option>
-              {CARTOES.map((c) => <option key={c} value={c}>{c}</option>)}
+            <select value={form.cartao} onChange={handleCartaoChange}>
+              <option value="">Outro</option>
+              {cartoes.map((c) => <option key={c.id} value={String(c.id)}>{c.apelido || BANCO_LABELS[c.banco]}</option>)}
             </select>
           </div>
           <div>
@@ -172,9 +183,15 @@ export function Compras({ sheetOpen, onSheetClose }: ComprasProps) {
   const visibleCompras = allCompras.filter((c) => {
     const inMonth = parcelaMes(c, mesRef, anoRef) > 0
     const matchSearch = !search || c.desc.toLowerCase().includes(search.toLowerCase())
-    const matchCard = !cardFilter || c.cartao === cardFilter
+    const matchCard = !cardFilter || c.cartao === parseInt(cardFilter)
     return inMonth && matchSearch && matchCard
   })
+
+  const cartaoLabel = (id: number | undefined) => {
+    if (id == null) return '-'
+    const c = state.cartoes.find((ct) => ct.id === id)
+    return c ? (c.apelido || BANCO_LABELS[c.banco]) : '-'
+  }
 
   const totalMes = totComprasMes(state, mesRef, anoRef)
   const parcelado = visibleCompras
@@ -228,7 +245,7 @@ export function Compras({ sheetOpen, onSheetClose }: ComprasProps) {
           onChange={(e) => setCardFilter(e.target.value)}
         >
           <option value="">Todos cartoes</option>
-          {CARTOES.map((c) => <option key={c} value={c}>{c}</option>)}
+          {state.cartoes.map((c) => <option key={c.id} value={String(c.id)}>{c.apelido || BANCO_LABELS[c.banco]}</option>)}
         </select>
       </div>
 
@@ -260,7 +277,7 @@ export function Compras({ sheetOpen, onSheetClose }: ComprasProps) {
                         </Badge>
                       </td>
                       <td className="py-2 text-right font-medium">{fmt(parcelaMes(c, mesRef, anoRef))}</td>
-                      <td className="py-2 text-[var(--text-dim)] capitalize">{c.cartao ?? '-'}</td>
+                      <td className="py-2 text-[var(--text-dim)]">{cartaoLabel(c.cartao)}</td>
                       <td className="py-2">
                         <div className="flex gap-1">
                           <button className="text-[var(--text-dim)] hover:text-[var(--text)] cursor-pointer bg-transparent border-0 p-1" onClick={() => handleEdit(c)}>
@@ -282,7 +299,7 @@ export function Compras({ sheetOpen, onSheetClose }: ComprasProps) {
                 <div key={c.id} className="bg-[var(--surface)] rounded-[var(--r)] p-3 flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium truncate">{c.desc}</p>
-                    <p className="text-xs text-[var(--text-dim)]">{fmtDate(c.data)} &bull; {c.cartao ?? 'sem cartao'}</p>
+                    <p className="text-xs text-[var(--text-dim)]">{fmtDate(c.data)} &bull; {cartaoLabel(c.cartao)}</p>
                     <Badge variant={c.tipo === 'parcelado' ? 'blue' : 'green'} className="mt-1">
                       {c.tipo === 'parcelado' ? `${c.nparc}x` : 'A vista'}
                     </Badge>

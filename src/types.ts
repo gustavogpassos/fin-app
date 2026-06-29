@@ -37,6 +37,7 @@ export interface Cartao {
   banco: BancoCartao
   apelido?: string
   limite: number
+  fechamento?: number
 }
 
 export interface Compra {
@@ -47,9 +48,10 @@ export interface Compra {
   valor: number
   parcela: number
   nparc: number
-  cartao?: BancoCartao
+  cartao?: number
   cat?: CategoriaCompra
   obs?: string
+  fechamentoCartao?: number
 }
 
 export interface Meta {

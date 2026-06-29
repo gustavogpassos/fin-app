@@ -27,8 +27,8 @@ export function Cartoes() {
   const [editing, setEditing] = useState<Cartao | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
-  const faturaBanco = (banco: string) =>
-    compras.reduce((acc, c) => (c.cartao === banco ? acc + parcelaMes(c, mesRef, anoRef) : acc), 0)
+  const faturaBanco = (cardId: number) =>
+    compras.reduce((acc, c) => (c.cartao === cardId ? acc + parcelaMes(c, mesRef, anoRef) : acc), 0)
 
   const billItems = [...compras]
     .filter(c => c.cartao && parcelaMes(c, mesRef, anoRef) > 0)
@@ -56,7 +56,7 @@ export function Cartoes() {
         </div>
       ) : (
         cartoes.map(card => {
-          const fatura = faturaBanco(card.banco)
+          const fatura = faturaBanco(card.id)
           const available = Math.max(0, card.limite - fatura)
           return (
             <div key={card.id} style={{ marginBottom: 4 }}>
@@ -139,7 +139,7 @@ export function Cartoes() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 700, color: '#0D1B2A', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{c.desc}</div>
-                      <div style={{ fontSize: 12, fontWeight: 500, color: '#6B7A95' }}>{c.cartao ? BANCO_LABELS[c.cartao] : '—'} · {c.data}</div>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: '#6B7A95' }}>{c.cartao != null ? (cartoes.find(ct => ct.id === c.cartao)?.apelido ?? BANCO_LABELS[cartoes.find(ct => ct.id === c.cartao)?.banco ?? 'outro']) : '—'} · {c.data}</div>
                     </div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: '#F03E5E', flexShrink: 0 }}>−{fmt(amount)}</div>
                   </div>

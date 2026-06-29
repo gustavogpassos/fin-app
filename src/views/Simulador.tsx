@@ -5,16 +5,16 @@ import { fmt } from '../utils/format'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Panel } from '../components/ui/Panel'
-import type { TipoCompra, CategoriaCompra, BancoCartao, Compra } from '../types'
+import { BANCO_LABELS } from '../components/CartaoSheet'
+import type { TipoCompra, CategoriaCompra, Compra } from '../types'
 
-const CARTOES: BancoCartao[] = ['nubank', 'inter', 'itau', 'bradesco', 'xp', 'c6', 'outro']
 const CATS: CategoriaCompra[] = ['alimentacao', 'transporte', 'saude', 'lazer', 'vestuario', 'educacao', 'casa', 'outro']
 
 const MES_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
 export function Simulador() {
   const state = useFinStore()
-  const { mesRef, anoRef } = state
+  const { mesRef, anoRef, cartoes } = state
 
   const [desc, setDesc] = useState('')
   const [valor, setValor] = useState('')
@@ -35,7 +35,7 @@ export function Simulador() {
     valor: valorNum,
     parcela,
     nparc: nParcNum,
-    cartao: (cartao || undefined) as BancoCartao | undefined,
+    cartao: cartao ? parseInt(cartao) : undefined,
     cat: (cat || undefined) as CategoriaCompra | undefined,
   }
 
@@ -89,7 +89,7 @@ export function Simulador() {
             <label>Cartao</label>
             <select value={cartao} onChange={(e) => setCartao(e.target.value)}>
               <option value="">Nenhum</option>
-              {CARTOES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {cartoes.map((c) => <option key={c.id} value={String(c.id)}>{c.apelido || BANCO_LABELS[c.banco]}</option>)}
             </select>
           </div>
           <div>

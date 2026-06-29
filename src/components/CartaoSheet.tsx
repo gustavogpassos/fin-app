@@ -22,6 +22,7 @@ export function CartaoSheet({ open, onClose, editing }: CartaoSheetProps) {
   const [banco, setBanco] = useState<BancoCartao>(editing?.banco ?? 'nubank')
   const [apelido, setApelido] = useState(editing?.apelido ?? '')
   const [limite, setLimite] = useState(editing ? String(editing.limite) : '')
+  const [fechamento, setFechamento] = useState(editing?.fechamento ? String(editing.fechamento) : '')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,6 +30,7 @@ export function CartaoSheet({ open, onClose, editing }: CartaoSheetProps) {
       banco,
       apelido: apelido.trim() || undefined,
       limite: parseFloat(limite) || 0,
+      fechamento: parseInt(fechamento) || undefined,
     }
     if (editing) updateCartao(editing.id, payload)
     else addCartao(payload)
@@ -48,9 +50,15 @@ export function CartaoSheet({ open, onClose, editing }: CartaoSheetProps) {
           <label>Apelido (opcional)</label>
           <input value={apelido} onChange={(e) => setApelido(e.target.value)} placeholder="Ex: Cartão principal" />
         </div>
-        <div>
-          <label>Limite (R$) *</label>
-          <input type="number" step="0.01" min="0" value={limite} onChange={(e) => setLimite(e.target.value)} required autoFocus />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label>Limite (R$) *</label>
+            <input type="number" step="0.01" min="0" value={limite} onChange={(e) => setLimite(e.target.value)} required autoFocus />
+          </div>
+          <div>
+            <label>Fechamento (dia)</label>
+            <input type="number" min="1" max="31" value={fechamento} onChange={(e) => setFechamento(e.target.value)} placeholder="Ex: 15" />
+          </div>
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>

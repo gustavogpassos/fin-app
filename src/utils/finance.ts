@@ -2,8 +2,14 @@ import type { Compra, AppState, Receita } from '../types'
 
 export function parcelaMes(compra: Compra, mes: number, ano: number): number {
   const dt = new Date(compra.data + 'T00:00:00')
-  const startMes = dt.getMonth() + 1
-  const startAno = dt.getFullYear()
+  let startMes = dt.getMonth() + 1
+  let startAno = dt.getFullYear()
+
+  // Shift billing to next month when purchase is after card's closing date
+  if (compra.fechamentoCartao && dt.getDate() > compra.fechamentoCartao) {
+    startMes++
+    if (startMes > 12) { startMes = 1; startAno++ }
+  }
 
   if (compra.tipo === 'avista') {
     return startMes === mes && startAno === ano ? compra.valor : 0
